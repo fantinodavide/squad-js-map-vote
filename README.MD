@@ -46,6 +46,16 @@ The `MapVote` plugin for squad js based on the original version https://github.c
 
 ### Options
 
+*   #### commandPrefix
+    
+    ###### Description
+    
+    The command name to use in chat.
+    
+    ###### Default
+    
+        !vote
+
 *   #### minPlayersForVote
     
     ###### Description
