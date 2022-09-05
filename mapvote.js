@@ -206,7 +206,7 @@ export default class MapVote extends BasePlugin {
                 return;
             case "help": //displays available commands
                 let msg = "";
-                msg += (`!vote <choices|number|results>\n`);
+                msg += (`!vote <choices|results>\n`);
                 if (isAdmin) msg += (`!vote <start|restart|cancel|broadcast> (admin only)\n`);
 
                 await this.warn(steamID, msg + `\nMapVote SquadJS plugin built by JetDave`);
