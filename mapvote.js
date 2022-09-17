@@ -42,6 +42,16 @@ export default class MapVote extends DiscordBasePlugin {
                 description: 'time in mins from the start of a round to the start of a new map vote',
                 default: 15
             },
+            voteStartHourUTC: {
+                required: false,
+                description: 'Defines a timespan in UTC hours when automatic votes happen. Set voteStartHourUTC and voteEndHourUTC to same number to always do auto votes.',
+                default: 0
+            },
+            voteEndHourUTC: {
+                required: false,
+                description: 'Defines a timespan in UTC hours when automatic votes happen. Set voteStartHourUTC and voteEndHourUTC to same number to always do auto votes.',
+                default: 0
+            },
             voteBroadcastInterval:
             {
                 required: false,
@@ -546,6 +556,9 @@ export default class MapVote extends DiscordBasePlugin {
             this.onConnectBound = false;
         }
 
+        if (!this.doStartAutomaticVote() && !force)
+            return;
+
         // these need to be reset after reenabling voting
         this.trackedVotes = {};
         this.tallies = [];
@@ -683,6 +696,16 @@ export default class MapVote extends DiscordBasePlugin {
         }
 
         return ties.map(i => this.nominations[ i ]);
+    }
+
+    doStartAutomaticVote(){
+        if (this.options.voteStartHourUTC == this.options.voteEndHourUTC)
+            return true
+        nowHr = new Date().getUTCHours();
+        if (this.options.voteStartHourUTC < this.options.voteEndHourUTC) 
+            return (nowHr >= this.options.voteStartHourUTC && nowHr <= this.options.voteEndHourUTC)
+        else // timeframe spans midnight
+            return (nowHr >= this.options.voteStartHourUTC || nowHr <= this.options.voteEndHourUTC)
     }
 }
 
