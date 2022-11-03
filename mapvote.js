@@ -140,6 +140,11 @@ export default class MapVote extends DiscordBasePlugin {
                 required: false,
                 description: 'Array of timeframes to override options',
                 default: []
+            },
+            voteLengthSeconds: {
+                required: false,
+                description: 'Seconds for vote to last before ending. 0 to disable feature.',
+                default: 0
             }
         };
     }
@@ -605,6 +610,16 @@ export default class MapVote extends DiscordBasePlugin {
         this.firstBroadcast = true;
         this.broadcastNominations();
         this.broadcastIntervalTask = setInterval(this.broadcastNominations, toMils(this.options.voteBroadcastInterval));
+        if (this.options.voteLengthSeconds > 0) {
+            setTimeout(async () => {
+                this.endVotingAsync();
+            }, this.options.voteLengthSeconds * 1000)
+        }
+    }
+
+    async endVotingAsync() {
+        this.endVotingGently();
+        await this.logWinnerToDiscord(this.options.voteWinnerBroadcastMessage + this.formatFancyLayer(Layers.layers.find((l) => l.layerid == this.updateNextMap())))
     }
 
     endVotingGently() {
@@ -731,6 +746,22 @@ export default class MapVote extends DiscordBasePlugin {
                 fields: [
                     {
                         name: 'Options:',
+                        value: `${message}`
+                    }
+                ]
+            },
+            timestamp: (new Date()).toISOString()
+        });
+    }
+    async logWinnerToDiscord(message) {
+        if (!this.options.logToDiscord) return
+        await this.sendDiscordMessage({
+            embed: {
+                title: 'Vote Ended',
+                color: 16761867,
+                fields: [
+                    {
+                        name: 'Winner:',
                         value: `${message}`
                     }
                 ]
