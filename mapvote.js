@@ -867,7 +867,7 @@ export default class MapVote extends DiscordBasePlugin {
                 const cls = cl.toLowerCase().split('_');
                 const fLayers = sanitizedLayers.filter((l) => (
                     ((cls[ 0 ] && cls[ 0 ] != '*') || rnd_layers.filter(l2 => l2.map.name == l.map.name).length < this.options.allowedSameMapEntries) &&
-                    (![ this.server.currentLayer?.map?.name, ...recentlyPlayedMaps ].includes(l.map.name) || (cls[ 0 ] && cls[ 0 ] != '*')) &&
+                    ((cls[ 0 ] && cls[ 0 ] != '*') || ![ this.server.currentLayer?.map?.name, ...recentlyPlayedMaps ].includes(l.map.name)) &&
                     (
                         (
                             (this.options.layerFilteringMode.toLowerCase() == "blacklist" && !this.options.layerLevelBlacklist.find((fl) => this.getLayersFromStringId(fl).map((e) => e.layerid).includes(l.layerid))) ||
@@ -914,6 +914,7 @@ export default class MapVote extends DiscordBasePlugin {
                 do l = randomElement(fLayers);
                 while (
                     rnd_layers.filter(lf => lf.map.name == l.map.name).length > (this.options.allowedSameMapEntries - 1)
+                    && rnd_layers.filter(lf => lf.layerid == l.layerid).length > 1
                     // && ((await this.getLayerHistoryForLevel(l.layerid.split('_')[ 0 ], +this.numberRecentLayersToExclude)).find(dbL => dbL.layerClassname == l.layerid) || cls[ 2 ])
                     && --maxtries >= 0
                 )
@@ -1171,10 +1172,10 @@ export default class MapVote extends DiscordBasePlugin {
                     || (cls[ 0 ].startsWith('F:') && [ this.getTranslation(l.teams[ 0 ])?.toUpperCase(), this.getTranslation(l.teams[ 1 ])?.toUpperCase() ].includes(cls[ 0 ].substring(2)))
                 )
                 && (
-                    l.gamemode.toUpperCase().startsWith(cls[ 1 ]) || (!cls[ 1 ] && this.options.gamemodeWhitelist.find(g => g.toUpperCase() == l.gamemode.toUpperCase()))
+                    l.gamemode.toUpperCase().startsWith(cls[ 1 ]) || ((!cls[ 1 ] || cls[ 1 ] == '*') && this.options.gamemodeWhitelist.find(g => g.toUpperCase() == l.gamemode.toUpperCase()))
                 )
                 && (
-                    !cls[ 2 ] || parseInt(l.version.replace(/v(0*)/i, '')) == parseInt(cls[ 2 ].replace(/v(0*)/i, ''))
+                    (!cls[ 2 ] || cls[ 2 ] == '*') || parseInt(l.version.replace(/v(0*)/i, '')) == parseInt(cls[ 2 ].replace(/v(0*)/i, ''))
                 )
             ));
             else ret = Layers.layers[ findOrFilter ]((l) => ((cls[ 0 ] == "*" || l.mod?.toUpperCase().startsWith(cls[ 0 ].toUpperCase())) && (cls[ 1 ] == "*" || l.map.name.toUpperCase().startsWith(cls[ 1 ])) && (l.gamemode.toUpperCase().startsWith(cls[ 2 ]) || (!cls[ 2 ] && this.options.gamemodeWhitelist.includes(l.gamemode.toUpperCase()))) && (!cls[ 3 ] || parseInt(l.version.toUpperCase().replace(/v(0*)/i, '')) == parseInt(cls[ 3 ].replace(/v(0*)/i, ''))) && (!cls[ 4 ] || cls[ 4 ] == l.layerid.split('_')[ 4 ]?.toUpperCase())))
