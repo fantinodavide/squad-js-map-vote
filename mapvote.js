@@ -373,11 +373,11 @@ export default class MapVote extends DiscordBasePlugin {
         this.server.on('UPDATED_SERVER_INFORMATION', (info) => this.setCurrentLayer(info.currentLayer));
         // this.server.on('PLAYER_CONNECTED', () => this.beginVoting());
         this.server.on('ROUND_ENDED', this.endVotingGently)
-        // setTimeout(() => {
-        //     this.verbose(1, 'Enabled late listeners.');
-        //     this.server.on('PLAYER_CONNECTED', this.setSeedingMode);
-        //     this.server.on('PLAYER_DISCONNECTED', this.setSeedingMode);
-        // }, 15 * 1000) // wait 10 seconds to be sure to have an updated player list
+        setTimeout(() => {
+            this.verbose(1, 'Enabled late listeners.');
+            this.server.on('PLAYER_CONNECTED', this.setSeedingMode);
+            this.server.on('PLAYER_DISCONNECTED', this.setSeedingMode);
+        }, 5 * 1000) // wait 10 seconds to be sure to have an updated player list
         this.verbose(1, 'Map vote was mounted.');
         this.verbose(1, "Blacklisted Layers/Levels: " + this.options.layerLevelBlacklist.join(', '))
         // await this.checkUpdates();
@@ -482,6 +482,18 @@ export default class MapVote extends DiscordBasePlugin {
                     res.setHeader('Content-Type', 'application/json');
                     res.write(this.rconLayers)
                     res.end();
+                } else if (req.method == 'GET' && req.url == '/mapvote/debug/currentVote') {
+                    res.setHeader('Content-Type', 'application/json');
+                    // res.write(this.nomination.map((v,i)=>({layerId: v, votes: this.trackedVotes[i], layer: Layers.})))
+                    res.write(JSON.stringify({
+                        nominations: this.nominations,
+                        trackedVotes: this.trackedVotes,
+                        tallies: this.tallies,
+                        votingEnabled: this.votingEnabled,
+                        factionStrings: this.factionStrings,
+                        firstBroadcast: this.firstBroadcast
+                    }))
+                    res.end();
                 }
             })
         } catch (error) {
@@ -557,7 +569,6 @@ export default class MapVote extends DiscordBasePlugin {
 
         if (!baseDataExist) {
             if (tries < 3) {
-                await this.serverQueryData();
                 return this.setSeedingMode(isNewGameEvent, tries++)
 
             } else {
@@ -565,6 +576,8 @@ export default class MapVote extends DiscordBasePlugin {
                 return;
             }
         }
+
+        await new Promise((res, rej) => this.server.once('UPDATED_SERVER_INFORMATION', res))
 
         if (this.options.automaticSeedingMode) {
             this.verbose(1, "Checking seeding mode");
@@ -973,6 +986,8 @@ export default class MapVote extends DiscordBasePlugin {
         else if (layer.faction) {
             const f = layer.faction.split(' ');
             let fTag = "";
+            if (f.length == 1)
+                return layer.faction
             f.forEach((e) => { fTag += e[ 0 ] });
             return fTag.toUpperCase();
         } else return "Unknown"
@@ -1330,7 +1345,7 @@ export default class MapVote extends DiscordBasePlugin {
 
         for (let k in bkData.server) this.server[ k ] = bkData.server[ k ];
 
-        const maxSecondsDiffierence = 60
+        const maxSecondsDiffierence = 120
         if ((new Date() - new Date(bkData.saveDateTime)) / 1000 > maxSecondsDiffierence) return
 
         this.verbose(1, "Restoring data:", bkData)
