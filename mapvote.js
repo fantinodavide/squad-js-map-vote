@@ -494,6 +494,29 @@ export default class MapVote extends DiscordBasePlugin {
                         firstBroadcast: this.firstBroadcast
                     }))
                     res.end();
+                } else if (req.method == 'GET' && req.url == '/mapvote/command/start') {
+                    res.setHeader('Content-Type', 'application/json');
+
+                    if (this.votingEnabled) {
+                        res.write("false")
+                        return;
+                    }
+                    this.beginVoting(true);
+
+                    res.write("true")
+                    res.end();
+                } else if (req.method == 'GET' && req.url == '/mapvote/command/broadcast') {
+                    res.setHeader('Content-Type', 'application/json');
+
+                    if (!this.votingEnabled) {
+                        res.write("false")
+                        return;
+                    }
+                    this.lastNominationBroadcast = +(new Date(0))
+                    this.broadcastNominations();
+
+                    res.write("true")
+                    res.end();
                 }
             })
         } catch (error) {
@@ -1345,7 +1368,7 @@ export default class MapVote extends DiscordBasePlugin {
 
         for (let k in bkData.server) this.server[ k ] = bkData.server[ k ];
 
-        const maxSecondsDiffierence = 120
+        const maxSecondsDiffierence = 180
         if ((new Date() - new Date(bkData.saveDateTime)) / 1000 > maxSecondsDiffierence) return
 
         this.verbose(1, "Restoring data:", bkData)
