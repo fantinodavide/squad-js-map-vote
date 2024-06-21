@@ -608,9 +608,9 @@ export default class MapVote extends DiscordBasePlugin {
             if (this.server.playerCount >= 1 && this.server.playerCount < maxSeedingModePlayerCount) {
                 // if (+(new Date()) - +this.server.layerHistory[ 0 ].time > 30 * 1000) {
                 const sanitizedLayers = Layers.layers.filter((l) => l.layerid && l.map &&
-                    (this.options.filterByMod.length == 0 || this.options.filterByMod.find(m => m.toLowerCase() == l?.mod?.toLowerCase() || ''))
+                    (this.options.filterByMod.length == 0 || this.options.filterByMod.find(m => l.layerid.match(new RegExp(`${m}_`, 'i'))))
                 );
-                const seedingMaps = sanitizedLayers.filter((l) => l.layerid && l.gamemode.toLowerCase() == this.options.seedingGameMode && !this.options.layerLevelBlacklist.find((fl) => l.layerid.toLowerCase().startsWith(fl.toLowerCase())))
+                const seedingMaps = sanitizedLayers.filter((l) => l.layerid && l.gamemode?.toLowerCase() == this.options.seedingGameMode && !this.options.layerLevelBlacklist.find((fl) => l.layerid.toLowerCase().startsWith(fl.toLowerCase())))
 
                 const rndMap = randomElement(seedingMaps);
                 if (this.server.currentLayer) {
@@ -872,7 +872,7 @@ export default class MapVote extends DiscordBasePlugin {
         let rnd_layers = [];
 
         const sanitizedLayers = Layers.layers.filter((l) => l.layerid && l.map &&
-            (this.options.filterByMod.length == 0 || this.options.filterByMod.find(m => m.toLowerCase() == l?.mod?.toLowerCase() || ''))
+            (this.options.filterByMod.length == 0 || this.options.filterByMod.find(m => l.layerid.match(new RegExp(`${m}_`, 'i'))))
         );
         const maxOptions = this.options.showRerollOption ? 20 : 21;
         const optionAmount = Math.min(maxOptions, this.options.entriesAmount);
@@ -919,7 +919,7 @@ export default class MapVote extends DiscordBasePlugin {
                     //     (cls[ 0 ] == "*" || l.layerid.toLowerCase().startsWith(cls[ 0 ]))
                     //     || (cls[ 0 ].toLowerCase().startsWith('f:') && [ this.getTranslation(l.teams[ 0 ]), this.getTranslation(l.teams[ 1 ]) ].includes(cls[ 0 ].substring(2).toUpperCase()))
                     // )
-                    // && (l.gamemode.toLowerCase().startsWith(cls[ 1 ]) || (!cls[ 1 ] && this.options.gamemodeWhitelist.includes(l.gamemode.toUpperCase())))
+                    // && (l.gamemode?.toLowerCase().startsWith(cls[ 1 ]) || (!cls[ 1 ] && this.options.gamemodeWhitelist.includes(l.gamemode?.toUpperCase())))
                     // && (!cls[ 2 ] || l.version.toLowerCase().startsWith("v" + cls[ 2 ].replace(/v(0*)/i, '')))
                     // // && !(this.options.factionsBlacklist.find((f) => [ this.getTranslation(l.teams[ 0 ]), this.getTranslation(l.teams[ 1 ]) ].includes(f)))
 
@@ -1011,7 +1011,7 @@ export default class MapVote extends DiscordBasePlugin {
             let fTag = "";
             if (f.length == 1)
                 return layer.faction
-            f.forEach((e) => { fTag += e[ 0 ] });
+            f.forEach((e) => { fTag += e[ 0 ] || '' });
             return fTag.toUpperCase();
         } else return "Unknown"
     }
@@ -1180,12 +1180,13 @@ export default class MapVote extends DiscordBasePlugin {
         const vehiclesString = assets.join('-');
 
         return this.options.entryFormat
-            .replace(/\{map_name\}/i, layer.map.name)
+            .replace(/\{map_name\}/i, layer.map.name.replace(new RegExp(`${layer.mod} ?`), ''))
             .replace(/\{gamemode\}/i, layer.gamemode)
             .replace(/\{map_version\}/i, layer.version)
             .replace(/\{version\}/i, layer.version)
             .replace(/\{factions\}/i, factionString)
             .replace(/\{main_assets\}/i, vehiclesString)
+            .replace(/\{time\}/i, layer.time || '')
     }
 
     getLayersFromStringId(stringid, findLayer) {
@@ -1210,13 +1211,13 @@ export default class MapVote extends DiscordBasePlugin {
                     || (cls[ 0 ].startsWith('F:') && [ this.getTranslation(l.teams[ 0 ])?.toUpperCase(), this.getTranslation(l.teams[ 1 ])?.toUpperCase() ].includes(cls[ 0 ].substring(2)))
                 )
                 && (
-                    l.gamemode.toUpperCase().startsWith(cls[ 1 ]) || ((!cls[ 1 ] || cls[ 1 ] == '*') && this.options.gamemodeWhitelist.find(g => g.toUpperCase() == l.gamemode.toUpperCase()))
+                    l.gamemode?.toUpperCase().startsWith(cls[ 1 ]) || ((!cls[ 1 ] || cls[ 1 ] == '*') && this.options.gamemodeWhitelist.find(g => g.toUpperCase() == l.gamemode?.toUpperCase()))
                 )
                 && (
                     (!cls[ 2 ] || cls[ 2 ] == '*') || parseInt(l.version.replace(/v(0*)/i, '')) == parseInt(cls[ 2 ].replace(/v(0*)/i, ''))
                 )
             ));
-            else ret = Layers.layers[ findOrFilter ]((l) => ((cls[ 0 ] == "*" || l.mod?.toUpperCase().startsWith(cls[ 0 ].toUpperCase())) && (cls[ 1 ] == "*" || l.map.name.toUpperCase().startsWith(cls[ 1 ])) && (l.gamemode.toUpperCase().startsWith(cls[ 2 ]) || (!cls[ 2 ] && this.options.gamemodeWhitelist.includes(l.gamemode.toUpperCase()))) && (!cls[ 3 ] || parseInt(l.version.toUpperCase().replace(/v(0*)/i, '')) == parseInt(cls[ 3 ].replace(/v(0*)/i, ''))) && (!cls[ 4 ] || cls[ 4 ] == l.layerid.split('_')[ 4 ]?.toUpperCase())))
+            else ret = Layers.layers[ findOrFilter ]((l) => ((cls[ 0 ] == "*" || l.mod?.toUpperCase().startsWith(cls[ 0 ].toUpperCase())) && (cls[ 1 ] == "*" || l.map.name.toUpperCase().startsWith(cls[ 1 ])) && (l.gamemode?.toUpperCase().startsWith(cls[ 2 ]) || (!cls[ 2 ] && this.options.gamemodeWhitelist.includes(l.gamemode?.toUpperCase()))) && (!cls[ 3 ] || parseInt(l.version.toUpperCase().replace(/v(0*)/i, '')) == parseInt(cls[ 3 ].replace(/v(0*)/i, ''))) && (!cls[ 4 ] || cls[ 4 ] == l.layerid.split('_')[ 4 ]?.toUpperCase())))
         }
         // this.verbose(1,"layers from string",stringid,cls,ret)
         return ret;
@@ -1456,7 +1457,7 @@ export default class MapVote extends DiscordBasePlugin {
             .match(/https:\/\/docs\.google\.com\/spreadsheets\/d\/[^\/]+/)[ 0 ]
             + '/gviz/tq?tqx=out:csv&sheet=Map%20Layers'
 
-        const sheetCsv = (await axios.get(gSheetUrlSanitized)).data?.replace(/\"/g, '')?.split('\n') || []//.map((l) => l.split(','))
+        const sheetCsv = (await axios.get(gSheetUrlSanitized), { timeout: 5000 }).data?.replace(/\"/g, '')?.split('\n') || []//.map((l) => l.split(','))
         // this.verbose(1, 'Sheet', sheetCsv)
         sheetCsv.shift();
         // this.verbose(1, 'Sheet', Layers.layers.length, sheetCsv.length, sheetCsv.find(l => l.includes("Manicouagan_RAAS_v1")))
@@ -1464,11 +1465,10 @@ export default class MapVote extends DiscordBasePlugin {
         this.rconLayers = await this.server.rcon.execute('ListLayers')
         let rconLayers = this.rconLayers.split('\n') || [];
         rconLayers.shift();
-        rconLayers = rconLayers.map((l) => l.split(' ')[ 0 ])
 
-        // this.verbose(1, 'RCON Layers', rconLayers.length, this.mapLayer(rconLayers[ 1 ]))
         if (rconLayers.length > 0) {
-            for (const layer of rconLayers) {
+            for (const rawLayer of rconLayers) {
+                const layer = rawLayer.split(' ')[ 0 ];
                 const versionRegex = /_v0(\d)$/i;
                 const versionMatching = layer.match(versionRegex);
                 const versionNumber = !!versionMatching ? +versionMatching[ 1 ] : null;
@@ -1476,14 +1476,22 @@ export default class MapVote extends DiscordBasePlugin {
                 const existingLayer = Layers.layers.find((e,) => e?.layerid == layer || (!!versionNumber && e?.layerid == layer.replace(versionRegex, `_v${versionNumber}`)));
                 // if (layer == "Manicouagan_RAAS_v01") this.verbose(1, 'Layer', existingLayer)
 
-                const genLayer = this.mapLayer(layer);
+                const genLayer = this.mapLayer(rawLayer);
 
-                if (!existingLayer) Layers.layers = Layers.layers.filter((l) => l != null && l.layerid != layer)
+                if (!genLayer) {
+                    this.verbose(1, `Unable to parse: ${layer}`)
+                    continue;
+                }
 
                 if (existingLayer && genLayer) {
                     if (layer != existingLayer.layerid) existingLayer.layerid = layer
 
-                    existingLayer.mod = genLayer.mod;
+                    for (let propKey in genLayer)
+                        if ([ undefined, null ].includes(existingLayer[ propKey ])) {
+                            // this.verbose(1, `Updating layer "${layer}" missing property "${propKey}": ${genLayer[ propKey ]}`)
+                            existingLayer[ propKey ] = genLayer[ propKey ];
+                        }
+
                     if (existingLayer.version == "TBD") existingLayer.version = genLayer.version
                 }
 
@@ -1518,6 +1526,8 @@ export default class MapVote extends DiscordBasePlugin {
             }
         }
 
+        // Layers.layers = Layers.layers.filter(layer => rconLayers.find(l => l.toLowerCase().startsWith(layer.layerid?.toLowerCase())))
+
         this.verbose(1, 'Layer list updated', Layers.layers.length, 'total layers');
         // this.verbose(1, 'Layers', Layers.layers.filter(l => l.layerid.startsWith('GC')));
 
@@ -1529,11 +1539,15 @@ export default class MapVote extends DiscordBasePlugin {
     }
 
     mapLayer(layerid) {
-        const l = layerid.split(' ')[ 0 ].replace(/[^a-z_\d\s\(\)]/gi, '').replace(/Whitebox_Test/i, 'Whitebox');
+        const l = layerid.replace(/Whitebox_Test/i, 'Whitebox');
         // if(l.includes('_DEV'))
         // if(l.startsWith('GC')) this.verbose(1, 'Parsing layer', l)
-        const gl = /^((?<mod>\w+)_)?(?<level>\w+)_(?<gamemode>\w+)_(?<version>V\d+)(.+)?/i.exec(l)?.groups
-        // this.verbose(1, 'Parsed layer', gl)
+        const vanillaLayerMatch = /^(?<level>[^_]+)_(?<gamemode>[^_]+)_(?<version>v\d+)?$/i.exec(l)?.groups
+        const steelDivisionModLayerMatch = /^(?<mod>[^_]+)_(?<level>Talil_Outskirts|(?:[^_]+))_(?<gamemode>[^_]+)_(?<time>[^_]+)_(?<team1>[a-z]+)v(?<team2>[a-z]+) \(Steel_Division\)/i.exec(l)?.groups
+        const genericModLayerMatch = /^(?<mod>[^_]+)_(?<level>[^_]+)_(?<gamemode>[^_]+)_(?<version>.+)/i.exec(l)?.groups
+
+        const gl = vanillaLayerMatch || steelDivisionModLayerMatch || genericModLayerMatch
+        // this.verbose(1, 'Parsed layer', l, gl)
         if (!gl || Object.keys(gl).length < 3) return;
 
         if (!gl.level) this.verbose(1, 'Empty level', gl)
@@ -1541,8 +1555,8 @@ export default class MapVote extends DiscordBasePlugin {
         let teams = []
         for (const t of [ 'team1', 'team2' ]) {
             teams.push({
-                faction: 'Unknown',
-                name: 'Unknown',
+                faction: gl[ t ] || 'Unknown',
+                name: gl[ t ] || 'Unknown',
                 tickets: 0,
                 commander: false,
                 vehicles: [],
@@ -1552,20 +1566,26 @@ export default class MapVote extends DiscordBasePlugin {
         }
         // this.verbose(1, 'teams', teams)
 
+        const finLayerId = layerid.split(' ')[ 0 ];
+
+        if (gl.time)
+            if (gl.time == 'D') gl.time = 'Day'
+            else gl.time = 'Night'
+
         return {
-            name: l.replace(/_/g, ' '),
-            classname: l,
-            layerid: layerid,
+            name: l.split(' ')[ 0 ].replace(/_/g, ' '),
+            classname: finLayerId,
+            layerid: finLayerId,
             map: {
                 name: gl.level
             },
             mod: gl.mod || '',
             gamemode: gl.gamemode,
-            gamemodeType: gl.gamemode,
             version: gl.version,
             size: '0.0x0.0 km',
             sizeType: 'Playable Area',
             numberOfCapturePoints: 0,
+            time: gl.time,
             lighting: {
                 name: 'Unknown',
                 classname: 'Unknown'
