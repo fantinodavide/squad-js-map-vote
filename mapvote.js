@@ -608,7 +608,7 @@ export default class MapVote extends DiscordBasePlugin {
             if (this.server.playerCount >= 1 && this.server.playerCount < maxSeedingModePlayerCount) {
                 // if (+(new Date()) - +this.server.layerHistory[ 0 ].time > 30 * 1000) {
                 const sanitizedLayers = Layers.layers.filter((l) => l.layerid && l.map &&
-                    (this.options.filterByMod.length == 0 || this.options.filterByMod.find(m => l.layerid.match(new RegExp(`${m}_`, 'i'))))
+                    (this.options.filterByMod.length == 0 || this.options.filterByMod.find(m => l.mod.toLowerCase() == m.toLowerCase()))
                 );
                 const seedingMaps = sanitizedLayers.filter((l) => l.layerid && l.gamemode?.toLowerCase() == this.options.seedingGameMode && !this.options.layerLevelBlacklist.find((fl) => l.layerid.toLowerCase().startsWith(fl.toLowerCase())))
 
@@ -872,7 +872,7 @@ export default class MapVote extends DiscordBasePlugin {
         let rnd_layers = [];
 
         const sanitizedLayers = Layers.layers.filter((l) => l.layerid && l.map &&
-            (this.options.filterByMod.length == 0 || this.options.filterByMod.find(m => l.layerid.match(new RegExp(`${m}_`, 'i'))))
+            (this.options.filterByMod.length == 0 || this.options.filterByMod.find(m => l.mod.toLowerCase() == m.toLowerCase()))
         );
         const maxOptions = this.options.showRerollOption ? 20 : 21;
         const optionAmount = Math.min(maxOptions, this.options.entriesAmount);
@@ -1544,9 +1544,10 @@ export default class MapVote extends DiscordBasePlugin {
         // if(l.startsWith('GC')) this.verbose(1, 'Parsing layer', l)
         const vanillaLayerMatch = /^(?<level>[^_]+)_(?<gamemode>[^_]+)_(?<version>v\d+)?$/i.exec(l)?.groups
         const steelDivisionModLayerMatch = /^(?<mod>[^_]+)_(?<level>Talil_Outskirts|(?:[^_]+))_(?<gamemode>[^_]+)_(?<time>[^_]+)_(?<team1>[a-z]+)v(?<team2>[a-z]+) \(Steel_Division\)/i.exec(l)?.groups
+        const squadOriginalModLayerMatch = /^(?<level>[^_]+)_(?<gamemode>[^_]+)_(?<version>.+)_(?<mod>[^_]+) \(SquadOriginal\)/i.exec(l)?.groups
         const genericModLayerMatch = /^(?<mod>[^_]+)_(?<level>[^_]+)_(?<gamemode>[^_]+)_(?<version>.+)/i.exec(l)?.groups
 
-        const gl = vanillaLayerMatch || steelDivisionModLayerMatch || genericModLayerMatch
+        const gl = vanillaLayerMatch || steelDivisionModLayerMatch || squadOriginalModLayerMatch || genericModLayerMatch
         // this.verbose(1, 'Parsed layer', l, gl)
         if (!gl || Object.keys(gl).length < 3) return;
 
