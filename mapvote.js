@@ -608,7 +608,7 @@ export default class MapVote extends DiscordBasePlugin {
             if (this.server.playerCount >= 1 && this.server.playerCount < maxSeedingModePlayerCount) {
                 // if (+(new Date()) - +this.server.layerHistory[ 0 ].time > 30 * 1000) {
                 const sanitizedLayers = Layers.layers.filter((l) => l.layerid && l.map &&
-                    (this.options.filterByMod.length == 0 || this.options.filterByMod.find(m => l.mod.toLowerCase() == m.toLowerCase()))
+                    (this.options.filterByMod.length == 0 || this.options.filterByMod.find(m => l.mod?.toLowerCase() == m.toLowerCase()))
                 );
                 const seedingMaps = sanitizedLayers.filter((l) => l.layerid && l.gamemode?.toLowerCase() == this.options.seedingGameMode && !this.options.layerLevelBlacklist.find((fl) => l.layerid.toLowerCase().startsWith(fl.toLowerCase())))
 
@@ -872,7 +872,7 @@ export default class MapVote extends DiscordBasePlugin {
         let rnd_layers = [];
 
         const sanitizedLayers = Layers.layers.filter((l) => l.layerid && l.map &&
-            (this.options.filterByMod.length == 0 || this.options.filterByMod.find(m => l.mod.toLowerCase() == m.toLowerCase()))
+            (this.options.filterByMod.length == 0 || this.options.filterByMod.find(m => l.mod?.toLowerCase() == m.toLowerCase()))
         );
         const maxOptions = this.options.showRerollOption ? 20 : 21;
         const optionAmount = Math.min(maxOptions, this.options.entriesAmount);
@@ -1548,7 +1548,13 @@ export default class MapVote extends DiscordBasePlugin {
             /^(?<mod>[^_]+)_(?<level>[^_]+)_(?<gamemode>[^_]+)_(?<version>.+)/i
         ]
 
-        const gl = layerIdParsers.find(r => r.exec(l))?.groups;
+        let gl;
+
+        for(let reg of layerIdParsers){
+            gl = reg.exec(l)?.groups;
+            if(gl) break;
+        }
+
         // this.verbose(1, 'Parsed layer', l, gl)
         if (!gl || Object.keys(gl).length < 3) return;
 
