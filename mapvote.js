@@ -1540,14 +1540,15 @@ export default class MapVote extends DiscordBasePlugin {
 
     mapLayer(layerid) {
         const l = layerid.replace(/Whitebox_Test/i, 'Whitebox');
-        // if(l.includes('_DEV'))
-        // if(l.startsWith('GC')) this.verbose(1, 'Parsing layer', l)
-        const vanillaLayerMatch = /^(?<level>[^_]+)_(?<gamemode>[^_]+)_(?<version>v\d+)?$/i.exec(l)?.groups
-        const steelDivisionModLayerMatch = /^(?<mod>[^_]+)_(?<level>Talil_Outskirts|(?:[^_]+))_(?<gamemode>[^_]+)_(?<time>[^_]+)_(?<team1>[a-z]+)v(?<team2>[a-z]+) \(Steel_Division\)/i.exec(l)?.groups
-        const squadOriginalModLayerMatch = /^(?<level>[^_]+)_(?<gamemode>[^_]+)_(?<version>.+)_(?<mod>[^_]+) \(SquadOriginal\)/i.exec(l)?.groups
-        const genericModLayerMatch = /^(?<mod>[^_]+)_(?<level>[^_]+)_(?<gamemode>[^_]+)_(?<version>.+)/i.exec(l)?.groups
 
-        const gl = vanillaLayerMatch || steelDivisionModLayerMatch || squadOriginalModLayerMatch || genericModLayerMatch
+        const layerIdParsers = [
+            /^(?<level>[^_]+)_(?<gamemode>[^_]+)_(?<version>v\d+)?$/i,
+            /^(?<mod>[^_]+)_(?<level>Talil_Outskirts|(?:[^_]+))_(?<gamemode>[^_]+)_(?<time>[^_]+)_(?<team1>[a-z]+)v(?<team2>[a-z]+) \(Steel_Division\)/i,
+            /^(?<level>[^_]+)_(?<gamemode>[^_]+)_(?<version>.+)_(?<mod>[^_]+) \(SquadOriginal\)/,
+            /^(?<mod>[^_]+)_(?<level>[^_]+)_(?<gamemode>[^_]+)_(?<version>.+)/i
+        ]
+
+        const gl = layerIdParsers.find(r => r.exec(l))?.groups;
         // this.verbose(1, 'Parsed layer', l, gl)
         if (!gl || Object.keys(gl).length < 3) return;
 
