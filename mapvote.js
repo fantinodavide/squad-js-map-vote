@@ -301,6 +301,8 @@ export default class MapVote extends DiscordBasePlugin {
 
         this.delay = util.promisify(setTimeout);
 
+        this.mountCompleted = false;
+
         this.DBLogPlugin;
 
         this.models = {};
@@ -389,6 +391,8 @@ export default class MapVote extends DiscordBasePlugin {
         this.getCurrentLayer();
 
         this.server.logParser.logReader.reader.on('line', this.onLogLine)
+
+        this.mountCompleted = true;
 
         // setTimeout(async () => {
         //     console.log((await this.getLayerHistoryForLevel('Gorodok')).map(l => l.layerClassname))
@@ -929,6 +933,7 @@ export default class MapVote extends DiscordBasePlugin {
                         || this.options.factionsBlacklist.find((f) => [ this.getTranslation(l.teams[ 0 ]), this.getTranslation(l.teams[ 1 ]) ].includes(f))
                     ))
                 ));
+
                 iterationLayersCount.push(fLayers.length);
                 // this.warn(steamid, `SanLayer: ${sanitizedLayers.filter(l => (
                 //     (
@@ -1386,6 +1391,7 @@ export default class MapVote extends DiscordBasePlugin {
 
     savePersistentData(steamID = null) {
         if (this.options.persistentDataFile == "") return;
+        if (!this.mountCompleted) return;
 
         const saveDt = {
             custom: {
@@ -1550,9 +1556,9 @@ export default class MapVote extends DiscordBasePlugin {
 
         let gl;
 
-        for(let reg of layerIdParsers){
+        for (let reg of layerIdParsers) {
             gl = reg.exec(l)?.groups;
-            if(gl) break;
+            if (gl) break;
         }
 
         // this.verbose(1, 'Parsed layer', l, gl)
